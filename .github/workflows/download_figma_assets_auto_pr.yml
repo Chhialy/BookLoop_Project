@@ -27,7 +27,7 @@ jobs:
     runs-on: windows-latest
     name: Download assets, run checks, create PR
     env:
-      FIGMA_API_TOKEN: ${{ figd_A4rE8ZSzRgviKJi4Ddw6AuVxWQkuIP9tWLhDVDhG }}
+      FIGMA_API_TOKEN: ${{ secrets.FIGMA_API_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
