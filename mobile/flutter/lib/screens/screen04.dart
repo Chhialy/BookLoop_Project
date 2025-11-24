@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../src/design_tokens.dart';
+import '../widgets/primary_button.dart';
 
 class Screen04 extends StatelessWidget {
   const Screen04({Key? key}) : super(key: key);
@@ -29,10 +30,10 @@ class Screen04 extends StatelessWidget {
                     const SizedBox(height: Tokens.spacingMedium),
                     Row(
                       children: [
-                        ElevatedButton(
-                            onPressed: () => context.go('/screen05'),
-                            child: const Text('Next')),
-                        const SizedBox(width: Tokens.spacingSmall),
+                        PrimaryButton(
+                          onPressed: () => context.go('/screen05'),
+                          child: const Text('Next'),
+                        ),
                         OutlinedButton(
                             onPressed: () => context.go('/'),
                             child: const Text('Back home')),

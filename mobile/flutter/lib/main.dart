@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'src/app_theme.dart';
 
 import 'screens/screen01.dart';
 import 'screens/screen02.dart';
@@ -42,10 +43,7 @@ class BookLoopApp extends ConsumerWidget {
 
     return MaterialApp.router(
       title: 'BookLoop Mobile',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
+      theme: AppTheme.light,
       routerConfig: _router,
     );
   }

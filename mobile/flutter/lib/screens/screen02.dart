@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../src/design_tokens.dart';
+import '../widgets/primary_button.dart';
 
 class Screen02 extends StatelessWidget {
   const Screen02({Key? key}) : super(key: key);
@@ -22,7 +23,7 @@ class Screen02 extends StatelessWidget {
             Text('Placeholder for Figma design (node-id: 15-440)',
                 style: TextStyle(color: Tokens.textSecondary)),
             const SizedBox(height: Tokens.spacingLarge),
-            ElevatedButton(
+            PrimaryButton(
                 onPressed: () => context.go('/screen03'),
                 child: const Text('Next'))
           ],

@@ -1,0 +1,115 @@
+name: Download Figma assets and open PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      fileKey:
+        description: 'sHv5XkKeQaF7rAcpHo9C20'
+        required: true
+      nodeIds:
+        description: '15:217,15:440,15:1429,15:1430,15:1431,15:1432,15:1433'
+        required: true
+      outDir:
+        description: 'mobile/flutter/assets'
+        required: false
+        default: 'mobile/flutter/assets'
+      targetBranch:
+        description: 'feat/figma-implement-mobile'
+        required: false
+        default: 'feat/figma-implement-mobile'
+      format:
+        description: 'png'
+        required: false
+        default: 'png'
+
+jobs:
+  download_and_pr:
+    runs-on: windows-latest
+    name: Download assets, run checks, create PR
+    env:
+      FIGMA_API_TOKEN: ${{ figd_A4rE8ZSzRgviKJi4Ddw6AuVxWQkuIP9tWLhDVDhG }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Ensure outDir exists
+        run: |
+          if (-not (Test-Path -Path "${{ github.workspace }}\${{ github.event.inputs.outDir }}")) {
+            New-Item -ItemType Directory -Path "${{ github.workspace }}\${{ github.event.inputs.outDir }}" -Force | Out-Null
+          }
+
+      - name: Run Figma downloader (PowerShell)
+        shell: powershell
+        run: |
+          $fileKey = '${{ github.event.inputs.fileKey }}'
+          $nodeIds = '${{ github.event.inputs.nodeIds }}'
+          $outDir = '${{ github.event.inputs.outDir }}'
+          $format = '${{ github.event.inputs.format }}'
+
+          if (-not $env:FIGMA_API_TOKEN) {
+            Write-Error "Missing FIGMA_API_TOKEN secret. Add it to repository secrets."
+            exit 1
+          }
+
+          Write-Host "Downloading nodes $nodeIds from file $fileKey -> $outDir (format=$format)"
+
+          powershell -ExecutionPolicy Bypass -File .\tools\download_figma_assets.ps1 -fileKey $fileKey -nodeIds $nodeIds -outDir $outDir -format $format
+
+      - name: Verify assets were downloaded
+        shell: powershell
+        run: |
+          $outDir = Join-Path $PWD "${{ github.event.inputs.outDir }}"
+          if (-not (Test-Path $outDir)) {
+            Write-Error "Output directory not found: $outDir"
+            exit 1
+          }
+          $files = Get-ChildItem -Path $outDir -Recurse -File -Include *.png,*.svg | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue
+          if (-not $files) {
+            Write-Error "No assets were downloaded to $outDir"
+            exit 1
+          }
+          Write-Host "Downloaded files:`n$($files -join "`n")"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Flutter pub get
+        run: |
+          cd mobile/flutter
+          flutter pub get
+
+      - name: Flutter analyze
+        run: |
+          cd mobile/flutter
+          flutter analyze
+
+      - name: Flutter test
+        run: |
+          cd mobile/flutter
+          flutter test --no-pub
+
+      - name: Create assets branch and open PR
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(assets): add Figma assets for ${{ github.run_id }}"
+          branch: "assets/figma-${{ github.run_id }}"
+          title: "Add Figma assets (run #${{ github.run_id }})"
+          body: |
+            This PR adds images exported from Figma for review and integration.
+
+            - Source file: `${{ github.event.inputs.fileKey }}`
+            - Nodes: `${{ github.event.inputs.nodeIds }}`
+            - Format: `${{ github.event.inputs.format }}`
+
+          base: ${{ github.event.inputs.targetBranch }}
+          labels: "assets,figma"
