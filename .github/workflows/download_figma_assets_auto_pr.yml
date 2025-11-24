@@ -22,6 +22,9 @@ on:
         required: false
         default: 'png'
 
+permissions:
+  contents: write
+
 jobs:
   download_and_pr:
     runs-on: windows-latest
@@ -76,6 +79,19 @@ jobs:
             exit 1
           }
           Write-Host "Downloaded files:`n$($files -join "`n")"
+
+      - name: Sanitize asset filenames (Windows-safe)
+        shell: powershell
+        run: |
+          Write-Host "Running filename sanitization script"
+          powershell -ExecutionPolicy Bypass -File .\tools\sanitize_asset_filenames.ps1
+
+      - name: Show changed files
+        run: |
+          git status --porcelain
+          git --no-pager ls-files --deleted || true
+          echo "Files under ${{ github.event.inputs.outDir }}:"
+          dir "${{ github.workspace }}\${{ github.event.inputs.outDir }}" /s /b || true
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
